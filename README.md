@@ -1,4 +1,6 @@
-# Training the UR3
+# Training the UR3 in Looking Glass
+
+[![Watch the video](https://img.youtube.com/vi/S7AAOXh_oAE/maxresdefault.jpg)](https://youtu.be/S7AAOXh_oAE)
 
 <img align="right" style="padding-left: 10px; padding-right: 10px; padding-bottom: 10px" height="200px" src="images/robot_still.png">
 
