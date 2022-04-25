@@ -17,51 +17,51 @@ namespace LookingGlass {
 		[System.NonSerialized]
 		public bool touchInputThisFrame = false;
 
-		Vector2 rMomentum;
-		Vector3 rLastPos;
+		private Vector2 rMomentum;
+		private Vector3 rLastPos;
 
 		[Header("Rotation variables")]
-		[SerializeField] [Range(0, 2)] float rotateSpeed = 0.5f;
-		[SerializeField] [Range(0, 1)] float rotateDrag = 0.1f;
+		[SerializeField] [Range(0, 2)] private float rotateSpeed = 0.5f;
+		[SerializeField] [Range(0, 1)] private float rotateDrag = 0.1f;
 
-		[SerializeField] [Range(0, 90)] float yMax = 80;
-		[SerializeField] [Range(-90, 0)] float yMin = -80;
+		[SerializeField] [Range(0, 90)] private float yMax = 80;
+		[SerializeField] [Range(-90, 0)] private float yMin = -80;
 
-		Vector2 pMomentum;
-		Vector3 pLastPos;
+		private Vector2 pMomentum;
+		private Vector3 pLastPos;
 
 		[Header("Pan")]
-		[SerializeField] [Range(0, 2)] float panSpeed = 0.7f;
-		[SerializeField] [Range(0, 1)] float panDrag = 0.1f;
+		[SerializeField] [Range(0, 2)] private float panSpeed = 0.7f;
+		[SerializeField] [Range(0, 1)] private float panDrag = 0.1f;
 
-		float zMomentum;
-		float zLastYPos;
+		private float zMomentum;
+		private float zLastYPos;
 
 		[Header("Zoom")]
-		[SerializeField] [Range(0, 10)] float mouseZoomSpeed = 1f;
-		[SerializeField] [Range(0, .2f)] float multitouchZoomSpeed = .1f;
-		[SerializeField] [Range(0, 1)] float zoomDrag = 0.2f;
-		[SerializeField] float multitouchZoomThreshold = 20f;
-		[SerializeField] float multitouchMaxJump = 100f;
-		[SerializeField] float minHoloplaySize = 0.01f;
-		[SerializeField] float maxHoloplaySize = 500f;
-		bool validRotationStart = false;
-		bool refocusingToPosition = false;
-		Vector3 refocusToPosition;
-		Vector3 startRefocusPosition;
+		[SerializeField] [Range(0, 10)] private float mouseZoomSpeed = 1f;
+		[SerializeField] [Range(0, .2f)] private float multitouchZoomSpeed = .1f;
+		[SerializeField] [Range(0, 1)] private float zoomDrag = 0.2f;
+		[SerializeField] private float multitouchZoomThreshold = 20f;
+		[SerializeField] private float multitouchMaxJump = 100f;
+		[SerializeField] private float minHoloplaySize = 0.01f;
+		[SerializeField] private float maxHoloplaySize = 500f;
+		private bool validRotationStart = false;
+		private bool refocusingToPosition = false;
+		private Vector3 refocusToPosition;
+		private Vector3 startRefocusPosition;
 
 		[Header("Double Click")]
-		[SerializeField] AnimationCurve refocusToPointCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
-		[SerializeField] float refocusToTime = 0.5f;
-		[SerializeField] float maxDistBetweenClicksMouse = 10f;
-		[SerializeField] float maxDistBetweenClicksTouch = 20f;
-		[SerializeField] float doubleClickTime = 0.5f;
-		[SerializeField] float doubleClickTimeTouch = 1f;
-		float doubleClickTimer;
-		float refocusToTimer;
-		bool oneClick = false;
-		bool oneTouch = false;
-		Vector3 oneClickPos;
+		[SerializeField] private AnimationCurve refocusToPointCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+		[SerializeField] private float refocusToTime = 0.5f;
+		[SerializeField] private float maxDistBetweenClicksMouse = 10f;
+		[SerializeField] private float maxDistBetweenClicksTouch = 20f;
+		[SerializeField] private float doubleClickTime = 0.5f;
+		[SerializeField] private float doubleClickTimeTouch = 1f;
+		private float doubleClickTimer;
+		private float refocusToTimer;
+		private bool oneClick = false;
+		private bool oneTouch = false;
+		private Vector3 oneClickPos;
 
 		[Header("UI Event System")]
 		[SerializeField] UnityEngine.EventSystems.EventSystem eventSys = null;
@@ -73,21 +73,21 @@ namespace LookingGlass {
 		public Vector2 multitouchRemapCursorY = new Vector2(0.05f, 0.95f);
 		public Vector2 multitouchRemapCursorX = new Vector2(0.05f, 0.95f);
 
-		Vector2[] lastTouchPositions;
+		private Vector2[] lastTouchPositions;
 
 		[SerializeField] Renderer cursorRend;
 
-		void Start() {
+		private Vector3 mousePosOnTouchEnd;
+
+		private void Start() {
 			lastTouchPositions = new Vector2[2];
 			if (cursorRend == null) {
 				cursorRend = FindObjectOfType<Cursor3D>().GetComponentInChildren<Renderer>();
 			}
 		}
 
-		Vector3 mousePosOnTouchEnd;
-
 		// Update is called once per frame
-		void Update() {
+		private void Update() {
 			bool touchLastFrame = touchInputThisFrame;
 
 			touchInputThisFrame = Input.touchCount > 0;
@@ -132,7 +132,7 @@ namespace LookingGlass {
 				Rotate();
 		}
 
-		void RotateInputStart() {
+		private void RotateInputStart() {
 			if (Input.GetMouseButtonDown(0)) {
 				validRotationStart = true;
 				if (!touchInputThisFrame)
@@ -143,7 +143,7 @@ namespace LookingGlass {
 			}
 		}
 
-		void RotateInputContinue(bool overUI) {
+		private void RotateInputContinue(bool overUI) {
 			if (Input.GetMouseButton(0)) {
 				if (validRotationStart) {
 					Vector3 delta = Input.mousePosition - rLastPos;
@@ -162,7 +162,7 @@ namespace LookingGlass {
 			}
 		}
 
-		void Rotate() {
+		private void Rotate() {
 			float newY = transform.eulerAngles.x + rMomentum.x;
 
 			if (newY < yMin || (newY < 360 + yMin && newY > 120)) {
@@ -178,7 +178,7 @@ namespace LookingGlass {
 			transform.RotateAround(transform.position, Vector3.up, rMomentum.y);
 		}
 
-		void Zoom() {
+		private void Zoom() {
 			if (!touchInputThisFrame) {
 				SimpleZoom();
 			} else if (Input.touchCount > 1) {
@@ -187,21 +187,23 @@ namespace LookingGlass {
 			HandleDoubleClick();
 		}
 
-		void SimpleZoom() {
+		private void SimpleZoom() {
 			float mouseScrollChange = Input.GetAxis("Mouse ScrollWheel");
 			mouseScrollChange = Mathf.Clamp(mouseScrollChange, -1f, 1f);
 
 			if (mouseScrollChange != 0) {
-				float newSize = Holoplay.Instance.size - mouseScrollChange * mouseZoomSpeed * Holoplay.Instance.size;
-				Holoplay.Instance.size = Mathf.Clamp(newSize, minHoloplaySize, maxHoloplaySize);
+				Holoplay h = Holoplay.Instance;
+				float size = h.CameraData.Size;
+				float newSize = size - mouseScrollChange * mouseZoomSpeed * size;
+				h.CameraData.Size = Mathf.Clamp(newSize, minHoloplaySize, maxHoloplaySize);
 			}
 		}
 
-		float Remap(float value, float from1, float to1, float from2, float to2) {
+		private float Remap(float value, float from1, float to1, float from2, float to2) {
 			return (value - from1) / (to1 - from1) * (to2 - from2) + from2;
 		}
 
-		Vector2 MultitouchPosition(int touchIndex) {
+		private Vector2 MultitouchPosition(int touchIndex) {
 			float minXVal = Holoplay.Instance.cal.screenWidth * multitouchRemapCursorX.x;
 			float minYVal = Holoplay.Instance.cal.screenHeight * multitouchRemapCursorY.x;
 
@@ -211,7 +213,7 @@ namespace LookingGlass {
 			return new Vector2(x, y);
 		}
 
-		void MultitouchZoom() {
+		private void MultitouchZoom() {
 			if (Input.GetTouch(1).phase == TouchPhase.Began) {
 				lastTouchPositions[0] = MultitouchPosition(0);
 				lastTouchPositions[1] = MultitouchPosition(1);
@@ -231,14 +233,16 @@ namespace LookingGlass {
 				delta = multitouchMaxJump * Mathf.Sign(delta);
 			}
 
-			float newSize = Holoplay.Instance.size + delta * multitouchZoomSpeed * Holoplay.Instance.size;
-			Holoplay.Instance.size = Mathf.Clamp(newSize, minHoloplaySize, maxHoloplaySize);
+			Holoplay h = Holoplay.Instance;
+			float size = h.CameraData.Size;
+			float newSize = size + delta * multitouchZoomSpeed * size;
+			h.CameraData.Size = Mathf.Clamp(newSize, minHoloplaySize, maxHoloplaySize);
 
 			lastTouchPositions[0] = MultitouchPosition(0);
 			lastTouchPositions[1] = MultitouchPosition(1);
 		}
 
-		void HandleDoubleClick() {
+		private void HandleDoubleClick() {
 			if (oneClick) {
 				doubleClickTimer += Time.deltaTime;
 				if (doubleClickTimer >= doubleClickTime) {
@@ -276,14 +280,12 @@ namespace LookingGlass {
 			}
 		}
 
-		void StartRaycastRefocus(bool overObject) {
+		private void StartRaycastRefocus(bool overObject) {
 			Vector3 vec = Vector3.zero;
 
 			if (overObject) {
 				vec = Cursor3D.Instance.GetWorldPos();
 			}
-
-			//Debug.Log(overObject);
 
 			refocusingToPosition = true;
 			refocusToPosition = vec;
@@ -297,7 +299,7 @@ namespace LookingGlass {
 			zMomentum = 0f;
 		}
 
-		void Pan() {
+		private void Pan() {
 			if (!touchInputThisFrame) {
 				if (Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2)) {
 					pLastPos = Input.mousePosition;
@@ -305,7 +307,7 @@ namespace LookingGlass {
 				} else if (Input.GetMouseButton(1) || Input.GetMouseButton(2)) {
 					Vector3 delta = Input.mousePosition - pLastPos;
 					float adjustedSpeed = panSpeed / 100f;
-					delta *= Time.deltaTime * adjustedSpeed * Holoplay.Instance.size;
+					delta *= Time.deltaTime * adjustedSpeed * Holoplay.Instance.CameraData.Size;
 
 					pMomentum -= new Vector2(delta.x, delta.y);
 
@@ -319,7 +321,7 @@ namespace LookingGlass {
 					Vector3 currentPos = (MultitouchPosition(0) + MultitouchPosition(1)) / 2.0f;
 					Vector3 delta = currentPos - pLastPos;
 					float adjustedSpeed = panSpeed / 100f;
-					delta *= Time.deltaTime * adjustedSpeed * Holoplay.Instance.size;
+					delta *= Time.deltaTime * adjustedSpeed * Holoplay.Instance.CameraData.Size;
 
 					pMomentum -= new Vector2(delta.x, delta.y);
 
@@ -331,7 +333,7 @@ namespace LookingGlass {
 			transform.position += transform.up * pMomentum.y;
 		}
 
-		void FixedUpdate() {
+		private void FixedUpdate() {
 			rMomentum *= 1 - rotateDrag;
 			pMomentum *= 1 - panDrag;
 			zMomentum *= 1 - zoomDrag;

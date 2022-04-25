@@ -20,9 +20,9 @@ namespace LookingGlass {
     }
 
     [System.Serializable]
-    public class LoadEvent : UnityEvent<LoadResults> { };
+    public class HoloplayLoadEvent : UnityEvent<LoadResults> { };
 
-    public static class PluginCore {
+    public static partial class PluginCore {
         public enum hpc_client_error {
             hpc_CLIERR_NOERROR,
             hpc_CLIERR_NOSERVICE,
@@ -47,7 +47,7 @@ namespace LookingGlass {
         [DllImport("HoloPlayCore")] private static extern int hpc_GetStateAsJSON(StringBuilder out_buf, int out_buf_sz);
         [DllImport("HoloPlayCore")] private static extern int hpc_GetNumDevices();
         [DllImport("HoloPlayCore")] private static extern int hpc_GetDevicePropertyInt(int dev_index, string query_string);
-        [DllImport("HoloPlayCore")] private static extern float hpc_GetDevicePropertyFloat(int dev_index, string query_string);
+        [DllImport("HoloPlayCore")] internal static extern float hpc_GetDevicePropertyFloat(int dev_index, string query_string);
         [DllImport("HoloPlayCore")] private static extern int hpc_GetDevicePropertyString(int dev_index, string query_string, StringBuilder out_buf, int out_buf_sz);
         [DllImport("HoloPlayCore")] private static extern int hpc_GetHoloPlayCoreVersion(StringBuilder out_buf, int out_buf_sz);
 
@@ -99,14 +99,17 @@ namespace LookingGlass {
 
         private static string GetSerial(int dev_index) {
             StringBuilder str = new StringBuilder(100);
-            PluginCore.hpc_GetDeviceSerial(dev_index, str, 100);
+            hpc_GetDeviceSerial(dev_index, str, 100);
             return str.ToString();
         }
         private static string GetLKGName(int dev_index) {
             StringBuilder str = new StringBuilder(100);
-            PluginCore.hpc_GetDeviceHDMIName(dev_index, str, 100);
-            // Debug.Log(" Device name: " + str);
+            hpc_GetDeviceHDMIName(dev_index, str, 100);
             return str.ToString();
+        }
+
+        public static int GetLKGunityIndex(int dev_index) {
+            return hpc_GetDevicePropertyInt(dev_index, "/unityIndex");
         }
 
         private const string InitKey = "isHoloPlayCoreInit";
@@ -166,14 +169,6 @@ namespace LookingGlass {
             return results;
         }
 
-        public static int GetLKGunityIndex(int dev_index) {
-#if UNITY_STANDALONE_OSX            
-            return hpc_GetDevicePropertyInt(dev_index, "/unityIndex");
-#else
-            return hpc_GetDevicePropertyInt(dev_index, "/unityIndex") - 1;
-#endif
-        }
-
         public static void Reset() {
             if (PlayerPrefs.GetInt(InitKey, DEFAULT) > DEFAULT)
                 hpc_CloseApp();
@@ -206,7 +201,7 @@ namespace LookingGlass {
                         errorMessage = "Unknown error";
                         break;
                 }
-                Debug.Log(string.Format("[Error] Client access error (code = {0}): {1}!", errorCode, errorMessage));
+                Debug.LogWarning(string.Format("[Error] Client access error (code = {0}): {1}!", errorCode, errorMessage));
             }
         }
 
@@ -216,13 +211,14 @@ namespace LookingGlass {
                 return null;
 
             Calibration[] calibrations = new Calibration[num_displays];
-            for (int i = 0; i < num_displays; ++i) {
+            for (int i = 0; i < num_displays; i++) {
                 int screenWidth = hpc_GetDevicePropertyScreenW(i);
                 int screenHeight = hpc_GetDevicePropertyScreenH(i);
                 float subp = hpc_GetDevicePropertySubp(i);
                 float viewCone = hpc_GetViewCone(i);
                 float aspect = hpc_GetDevicePropertyDisplayAspect(i);
                 float pitch = hpc_GetDevicePropertyPitch(i);
+                float slope = hpc_GetDevicePropertyTilt(i);
                 float center = hpc_GetDevicePropertyCenter(i);
                 float fringe = hpc_GetDevicePropertyFringe(i);
                 string serial = GetSerial(i);
@@ -232,7 +228,7 @@ namespace LookingGlass {
 
                 float flipImageX = hpc_GetDevicePropertyFloat(i, "/calibration/flipImageX/value");
                 float rawSlope = hpc_GetDevicePropertyFloat(i, "/calibration/slope/value");
-                float slope = hpc_GetDevicePropertyTilt(i);
+                float dpi = hpc_GetDevicePropertyFloat(i, "/calibration/DPI/value");
 
                 Calibration newCal = new Calibration(
                     i,
@@ -248,9 +244,11 @@ namespace LookingGlass {
                     fringe,
                     serial,
                     LKGname,
-                    xpos, ypos,
+                    xpos, 
+                    ypos,
                     rawSlope,
-                    flipImageX
+                    flipImageX,
+                    dpi
                 );
                 calibrations[i] = newCal;
             }

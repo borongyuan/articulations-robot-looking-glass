@@ -1,5 +1,5 @@
 The HoloPlay Unity Plugin
-ver 1.4.3
+ver 1.5.0
 
 Please visit the docs site for explanations of how everything works:
 https://docs.lookingglassfactory.com/developer-tools/unity

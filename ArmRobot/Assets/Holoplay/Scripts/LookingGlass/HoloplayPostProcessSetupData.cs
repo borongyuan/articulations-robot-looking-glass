@@ -12,7 +12,7 @@ namespace LookingGlass {
         /// <summary>
         /// The main camera used for rendering.
         /// </summary>
-        public Camera camera;
+        public Camera singleViewCamera;
 
         /// <summary>
         /// The camera used for rendering post-processing effects.

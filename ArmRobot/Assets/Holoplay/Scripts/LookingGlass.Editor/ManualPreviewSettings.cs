@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEditor;
 
 namespace LookingGlass.Editor {
-	//TODO: Is this really only an editor-only asset?
 	public class ManualPreviewSettings : ScriptableObject {
 		public bool manualPosition = true;
 		public Vector2Int position = new Vector2Int(0, 0);

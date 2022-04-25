@@ -50,7 +50,7 @@ namespace LookingGlass {
 			// // make sure the Holoplay is capturing depth
 			// holoplay.cam.depthTextureMode = DepthTextureMode.Depth;
 			// passing shader vars
-			Vector4 dofParams = new Vector4(start, dip, rise, end) * holoplay.size;
+			Vector4 dofParams = new Vector4(start, dip, rise, end) * holoplay.CameraData.Size;
 			dofParams = new Vector4(
 				1.0f / (dofParams.x - dofParams.y),
 				dofParams.y,
@@ -58,7 +58,7 @@ namespace LookingGlass {
 				1.0f / (dofParams.w - dofParams.z)
 			);
 			boxBlurMat.SetVector("dofParams", dofParams);
-			boxBlurMat.SetFloat("focalLength", holoplay.GetCamDistance());
+			boxBlurMat.SetFloat("focalLength", holoplay.GetCameraDistance());
 			finalpassMat.SetInt("testFocus", testFocus ? 1 : 0);
 			if (horizontalOnly)
 				Shader.EnableKeyword("_HORIZONTAL_ONLY");
@@ -80,14 +80,14 @@ namespace LookingGlass {
 			));
 
 			var tile = new Vector4(
-                holoplay.quiltSettings.viewColumns,
-                holoplay.quiltSettings.viewRows,
-                holoplay.quiltSettings.numViews,
-                holoplay.quiltSettings.viewColumns * holoplay.quiltSettings.viewRows
+                holoplay.QuiltSettings.viewColumns,
+                holoplay.QuiltSettings.viewRows,
+                holoplay.QuiltSettings.numViews,
+                holoplay.QuiltSettings.viewColumns * holoplay.QuiltSettings.viewRows
             );
 			var viewPortion = new Vector4(
-                holoplay.quiltSettings.viewPortionHorizontal,
-                holoplay.quiltSettings.viewPortionVertical
+                holoplay.QuiltSettings.ViewPortionHorizontal,
+                holoplay.QuiltSettings.ViewPortionVertical
             );
 			boxBlurMat.SetVector("tile", tile);
             boxBlurMat.SetVector("viewPortion", viewPortion);

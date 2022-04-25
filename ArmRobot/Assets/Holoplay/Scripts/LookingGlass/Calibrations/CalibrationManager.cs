@@ -26,7 +26,7 @@ namespace LookingGlass {
         public static bool HasAnyCalibrations => calibrations != null && calibrations.Length > 0;
         public static int CalibrationCount => calibrations?.Length ?? 0;
 
-        public static bool IsIndexValid(int index) => initialized && index >= 0 && index < calibrations.Length;
+        public static bool IsIndexValid(int lkgIndex) => initialized && lkgIndex >= 0 && lkgIndex < calibrations.Length;
 
         public static void Refresh() {
             calibrations = PluginCore.GetCalibrationArray();
@@ -34,17 +34,28 @@ namespace LookingGlass {
             onRefresh?.Invoke();
         }
 
-        public static Calibration GetCalibration(int index) {
+        public static Calibration GetCalibration(int lkgIndex) {
+            Calibration calibration = default;
             if (!initialized) {
                 Debug.LogWarning(WarningMessages.NotInitialized);
-                return new Calibration(0);
-            }
-            if (!IsIndexValid(index)) {
-                Debug.LogWarning("Calibration index " + index + " is invalid! (There are " + CalibrationCount + " calibrations).");
-                return new Calibration(0);
+                return calibration;
             }
 
-            return calibrations[index];
+            if (CalibrationCount > 0)
+                calibration = calibrations[0];
+
+            if (!IsIndexValid(lkgIndex)) {
+                Debug.LogWarning("Calibration index " + lkgIndex + " is invalid! (There are " + CalibrationCount + " calibrations).");
+                return calibration;
+            }
+
+            calibration = calibrations[lkgIndex];
+            return calibration;
+        }
+
+        public static bool TryGetCalibration(int lkgIndex, out Calibration calibration) {
+            calibration = GetCalibration(lkgIndex);
+            return calibration.IsValid;
         }
 
         /// <summary>
@@ -58,6 +69,9 @@ namespace LookingGlass {
                 Debug.LogWarning(WarningMessages.NotInitialized);
                 return false;
             }
+
+            if (CalibrationCount > 0)
+                calibration = GetCalibration(0);
 
             for (int i = 0; i < calibrations.Length; i++) {
                 if (calibrations[i].LKGname == lkgName) {

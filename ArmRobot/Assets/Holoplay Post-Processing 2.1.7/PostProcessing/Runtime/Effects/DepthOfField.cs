@@ -183,9 +183,9 @@ namespace UnityEngine.Rendering.PostProcessing
             if (settings.holoplayDrivenFocus.value) {
                 var hp = context.camera.GetComponent<LookingGlass.Holoplay>();
                 if (hp != null) {
-                    focusDistance = Mathf.Abs(hp.camDist); 
-                    focalLength = Mathf.Abs(hp.camDist * settings.holoplayIntensity.value);
-                    aperture = Mathf.Abs(hp.camDist / settings.holoplayIntensity.value);
+                    focusDistance = Mathf.Abs(hp.CameraDistance); 
+                    focalLength = Mathf.Abs(hp.CameraDistance * settings.holoplayIntensity.value);
+                    aperture = Mathf.Abs(hp.CameraDistance / settings.holoplayIntensity.value);
                 }
             }
 

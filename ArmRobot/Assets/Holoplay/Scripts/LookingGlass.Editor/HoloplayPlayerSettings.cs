@@ -35,9 +35,23 @@ namespace LookingGlass.Editor {
             new setting("Run in Background", true, false,
                 () => { PlayerSettings.runInBackground = true; }
             ),
+            // No display resolution dialog after 2019.3
+            // On Windows, we use SetParams to implement auto display targetting so we don't need this to be enabled by default
+            // Instead, we recommend disable it on Windows
+#if !UNITY_2019_3_OR_NEWER
+
+#if UNITY_EDITOR_WIN
+            new setting("Resolution Dialog: disabled", true, false,
+                () => { PlayerSettings.displayResolutionDialog = ResolutionDialogSetting.Disabled; }
+            ),
+#elif UNITY_EDITOR_OSX
             new setting("Resolution Dialog: enabled", true, false,
                 () => { PlayerSettings.displayResolutionDialog = ResolutionDialogSetting.Enabled; }
             ),
+#endif
+    
+#endif
+       
             new setting("Use Fullscreen Window", true, false,
 #if UNITY_2018_1_OR_NEWER
                 () => { PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow; }
@@ -55,26 +69,25 @@ namespace LookingGlass.Editor {
             )
         };
 
-        static void AddAllCustomSizesAndSetDefault()
-        {
-            var currentGroupType = Preview.CurrentGameViewSizeGroupType;
-            for (int i = 0; i < HoloplayDevice.presets.Length; i++)
-            {
+        private static void AddAllCustomSizesAndSetDefault() {
+            GameViewSizeGroupType currentGroupType = GameViewExtensions.CurrentGameViewSizeGroupType;
+            for (int i = 0; i < HoloplayDevice.presets.Length; i++) {
                 HoloplayDevice.Settings settings = HoloplayDevice.presets[i];
                 string deviceName = settings.name;
+
                 int width = settings.screenWidth;
                 int height = settings.screenHeight;
                 string customSizeName = deviceName + string.Format(" {0} x {1}", width, height);
-                int index;
-			    bool sizeExists = Preview.FindSize(currentGroupType, customSizeName, out index);
-                if(!sizeExists)
-                    Preview.AddCustomSize (currentGroupType, width, height, settings.name);
+
+                bool sizeExists = GameViewExtensions.FindSize(currentGroupType, customSizeName, out int index);
+                if (!sizeExists)
+                    GameViewExtensions.AddCustomSize(currentGroupType, width, height, settings.name);
             }
             HoloplayDevice.Settings defaultSettings = HoloplayDevice.GetSettings(HoloplayDevice.Type.Portrait);
-            var currentWindows = Resources.FindObjectsOfTypeAll(Preview.gameViewWindowType);
-            foreach (EditorWindow w in currentWindows) {                
+            EditorWindow[] gameViews = GameViewExtensions.FindAllGameViews();
+            foreach (EditorWindow w in gameViews) {
                 // change game view resolution if emulated device prop get changed
-                Preview.SetGameViewResolution(w, defaultSettings.screenWidth,defaultSettings.screenHeight, defaultSettings.name);
+                GameViewExtensions.SetGameViewResolution(w, defaultSettings.screenWidth, defaultSettings.screenHeight, defaultSettings.name);
             }
         }
 

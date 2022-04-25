@@ -2,8 +2,7 @@
 //All rights reserved.
 //Unauthorized copying or distribution of this file, and the source code contained herein, is strictly prohibited.
 
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 namespace LookingGlass {
@@ -18,15 +17,16 @@ namespace LookingGlass {
 				return instance;
 			}
 		}
-		Holoplay holoplay { get{ return Holoplay.Instance; } }
 		[Tooltip("Disables the OS cursor at the start")]
 		public bool disableSystemCursor = true;
+
 		[Tooltip("Should the cursor scale follow the size of the Holoplay?")]
 		public bool relativeScale = true;
-		[System.NonSerialized] public Texture2D depthNormals;
-		[System.NonSerialized] public Shader depthOnlyShader;
-		[System.NonSerialized] public Shader readDepthPixelShader;
-		[System.NonSerialized] public Material readDepthPixelMat;
+
+		[NonSerialized] public Texture2D depthNormals;
+		[NonSerialized] public Shader depthOnlyShader;
+		[NonSerialized] public Shader readDepthPixelShader;
+		[NonSerialized] public Material readDepthPixelMat;
 		public GameObject cursorGameObject;
 		private bool cursorGameObjectExists;
 		private bool frameRendered;
@@ -39,7 +39,6 @@ namespace LookingGlass {
 		private Quaternion localRotation;
 		private bool overObject;
 
-		// debug texture
 		public RenderTexture debugTexture;
 
 		//Additions for UI cursor by Duncan
@@ -57,29 +56,15 @@ namespace LookingGlass {
 		public Quaternion GetLocalRotation() { Update(); return localRotation; }
 		public bool GetOverObject() { Update(); return overObject; }
 
-		void Start() {
-			if (disableSystemCursor) Cursor.visible = false;
-			cursorGameObjectExists = cursorGameObject != null;
-			//Duncan addition for 2D UI
-			if(uiCursor != null){
-				parentCanvas = uiCursor.GetComponentInParent<Canvas>();
-				rend = GetComponentInChildren<Renderer>();
-				InitializeCursor();
-			}
-			//end
-		}
-
 		//Duncan addition for 2D UI
-		void InitializeCursor(){
-			Vector2 pos;
-
+		private void InitializeCursor() {
 			RectTransformUtility.ScreenPointToLocalPointInRectangle(
 				parentCanvas.transform as RectTransform, Input.mousePosition,
 				parentCanvas.worldCamera,
-				out pos);
+				out Vector2 pos);
 		}
 
-		void MoveUICursor(Vector3 inputPos, GameObject uiCursor, Canvas parent){
+		private void MoveUICursor(Vector3 inputPos, GameObject uiCursor, Canvas parent) {
 			Vector2 movePos;
 
 			RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -90,14 +75,14 @@ namespace LookingGlass {
 			uiCursor.transform.position = parentCanvas.transform.TransformPoint(movePos);
 		}
 
-		bool Render2DCursorMode(int monitor, Vector3 mousePos){
-			if(monitor == 1){ //We're on the second monitor
+		private bool Render2DCursorMode(int monitor, Vector3 mousePos) {
+			if (monitor == 1){ //We're on the second monitor
 				if(uiCursor.activeSelf)
 					uiCursor.SetActive(false);
 				if(!rend.enabled)
 					rend.enabled = true;
 				return false;
-			} else{
+			} else {
 				if(!uiCursor.activeSelf)
 					uiCursor.SetActive(true);
 				if(rend.enabled)
@@ -108,7 +93,19 @@ namespace LookingGlass {
 		}
 		//End
 
-		void OnEnable() {
+		private void Start() {
+			if (disableSystemCursor) Cursor.visible = false;
+			cursorGameObjectExists = cursorGameObject != null;
+			//Duncan addition for 2D UI
+			if (uiCursor != null) {
+				parentCanvas = uiCursor.GetComponentInParent<Canvas>();
+				rend = GetComponentInChildren<Renderer>();
+				InitializeCursor();
+			}
+			//end
+		}
+
+		private void OnEnable() {
 			depthOnlyShader = Shader.Find("Holoplay/DepthOnly");
 			readDepthPixelShader = Shader.Find("Holoplay/ReadDepthPixel");
 			if (readDepthPixelShader != null) 
@@ -119,27 +116,33 @@ namespace LookingGlass {
 			cursorCam.gameObject.hideFlags = HideFlags.HideAndDontSave;
 		}
 
-		void OnDisable() {
+		private void OnDisable() {
 			if (cursorCam.gameObject != null)
 				DestroyImmediate(cursorCam.gameObject);
 		}
 
-		void Update() {
+		private void Update() {
+			Holoplay holoplay = Holoplay.Instance;
 			if (holoplay == null) {
 				Debug.LogWarning("[Holoplay] No holoplay detected for 3D cursor!");
 				enabled = false;
 				return;
 			}
-			if (frameRendered) return; // don't update if frame's been rendered already
+
+			if (frameRendered)
+				return; // don't update if frame's been rendered already
+
 			cursorCam.CopyFrom(holoplay.SingleViewCamera);
-			var w = holoplay.quiltSettings.viewWidth;
-			var h = holoplay.quiltSettings.viewHeight;
-			var colorRT = RenderTexture.GetTemporary(
+			int w = holoplay.QuiltSettings.ViewWidth;
+			int h = holoplay.QuiltSettings.ViewHeight;
+
+			RenderTexture colorRT = RenderTexture.GetTemporary(
 				w, h, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear, 1);
 			colorRT.filterMode = FilterMode.Point; // important to avoid some weird edge cases
 			colorRT.antiAliasing = 1;
-			var depthNormalsRT = RenderTexture.GetTemporary(
+			RenderTexture depthNormalsRT = RenderTexture.GetTemporary(
 				1, 1, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+
 			cursorCam.targetTexture = colorRT;
 			cursorCam.allowMSAA = false;
 			float halfNormal = 0.5f;
@@ -156,6 +159,7 @@ namespace LookingGlass {
 					cursorGameObject.SetActive(false);
 				}
 			}
+
 			cursorCam.RenderWithShader(depthOnlyShader, "RenderType");
 			// turn cursor object back on
 			if (cursorGameObjectExists && cursorObjectEnabled) {
@@ -202,7 +206,7 @@ namespace LookingGlass {
 			float depth = DecodeFloatRG(enc);
 			overObject = depth < 1f;
 			if (!overObject) {
-				depth = holoplay.nearClipFactor / (holoplay.nearClipFactor + holoplay.farClipFactor);
+				depth = holoplay.CameraData.NearClipFactor / (holoplay.CameraData.NearClipFactor + holoplay.CameraData.FarClipFactor);
 			}
 			// bool hit = true;
 			// depth = hit ? depth : 0.5f; // if nothing hit, default depth
@@ -215,7 +219,7 @@ namespace LookingGlass {
 
 
 			//Duncan addition for 2D UI
-			if(uiCursor != null){
+			if (uiCursor != null) {
 				//I don't like that I need to return a bool here
 				//It's because OrbitControl.cs also handles some 3D cursor rendering logic for multi-touch stuff
 				//Would like to find a way to clean this up
@@ -233,7 +237,7 @@ namespace LookingGlass {
 				transform.rotation = rotation;
 				// might as well set size here as well
 				if (relativeScale) 
-					transform.localScale = Vector3.one * holoplay.size * 0.1f;
+					transform.localScale = Vector3.one * holoplay.CameraData.Size * 0.1f;
 			}
 
 			// reset settings
@@ -243,12 +247,12 @@ namespace LookingGlass {
 			frameRendered = true;
 		}
 
-		void LateUpdate() {
+		private void LateUpdate() {
 			frameRendered = false;
 		}
 
 		// copied from UnityCG.cginc
-		Vector3 DecodeViewNormalStereo(Color enc4) {
+		private Vector3 DecodeViewNormalStereo(Color enc4) {
 			float kScale = 1.7777f;
 			Vector3 enc4xyz = new Vector3(enc4.r, enc4.g, enc4.b);
 			Vector3 asdf = Vector3.Scale(enc4xyz, new Vector3(2f*kScale, 2f*kScale, 0f));
@@ -260,7 +264,7 @@ namespace LookingGlass {
 		}
 
 		// copied from UnityCG.cginc
-		float DecodeFloatRG(Color enc) {
+		private float DecodeFloatRG(Color enc) {
 			Vector2 encxy = new Vector2(enc.b, enc.a);
 			Vector2 kDecodeDot = new Vector2(1.0f, 1.0f/255.0f);
 			return Vector2.Dot(encxy, kDecodeDot);
